@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Pokédex palette */
+        --pokedex-red: #CC0000;
+        --pokedex-red-dk: #990000;
+        --screen-bg: #0a0f1e;
+        --screen-blue: #1a2744;
+        --screen-glow: #3b82f6;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background-color: var(--screen-bg);
+        color: #e2e8f0;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Scrollbar estilo Pokédex */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #0a0f1e;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--pokedex-red);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #ff2222;
+    }
+}
+
+@layer utilities {
+
+    /* Screen glow effect for cards */
+    .screen-glow {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.15), 0 0 60px rgba(59, 130, 246, 0.05);
+    }
+
+    .screen-glow-hover:hover {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.25), 0 0 80px rgba(59, 130, 246, 0.08);
+    }
+
+    /* Pokédex red glow for active elements */
+    .red-glow {
+        box-shadow: 0 0 15px rgba(204, 0, 0, 0.4);
+    }
+
+    /* Scan line effect for screen areas */
+    .scanlines {
+        background-image: repeating-linear-gradient(to bottom,
+                transparent,
+                transparent 1px,
+                rgba(0, 0, 0, 0.15) 1px,
+                rgba(0, 0, 0, 0.15) 2px);
+    }
+}

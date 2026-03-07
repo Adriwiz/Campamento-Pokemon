@@ -1,0 +1,189 @@
+# Campamento Pokémon — Implementation Plan
+
+A full-stack, role-based Pokémon web app combining a Pokédex, Team Builder, and Item Shop. Built on React + Vite, Firebase (Auth + Firestore), and PokéAPI. Deployed statically to GitHub Pages.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Firebase credentials**: You must provide your own Firebase project credentials. I will create a `.env` file template (`.env.example`) with the required variable names. You fill it in with real values before running or deploying.
+
+> [!IMPORTANT]
+> **GitHub Pages base path**: I will configure Vite's `base` to `/campamento-pokemon/`. If your repo or GitHub Pages URL uses a different path, let me know before deployment.
+
+> [!WARNING]
+> **Admin role**: Admin status is determined by a Firestore `users` document field `role: "admin"`. After creating an account, you must manually set this field in the Firebase console for the admin user. There is no self-promotion UI by design.
+
+---
+
+## Proposed Changes
+
+### Phase 1 — Project Bootstrap & Config
+
+#### [NEW] Project root via Vite
+- Run: `npx create-vite@latest . -- --template react` inside `c:\Users\Usuario\Documents\Finales\WEB_Andres`
+- Install: `react-router-dom zustand react-hook-form clsx tailwind-merge firebase`
+- Install dev: `tailwindcss postcss autoprefixer`
+
+#### [MODIFY] `vite.config.js`
+- Set `base: '/campamento-pokemon/'` for GitHub Pages
+- Alias `@` → `./src`
+
+#### [MODIFY] `tailwind.config.js`
+Custom breakpoints (replacing Tailwind defaults):
+| Name | Width |
+|------|-------|
+| `sm` | 480px |
+| `md` | 510px |
+| `lg` | 767px |
+| `xl` | 990px |
+| `2xl` | 1920px |
+
+#### [NEW] `.env.example`
+Firebase config env vars template.
+
+---
+
+### Phase 2 — Folder Structure
+
+```
+src/
+├── assets/           # Static assets, SVGs
+├── components/
+│   ├── ui/           # Button, Card, Modal, Loader, Badge, Input
+│   ├── layout/       # Navbar, Footer, PageWrapper
+│   └── guards/       # ProtectedRoute, RoleGuard
+├── hooks/            # useAuth, usePokemon, useTeam, useShop
+├── pages/
+│   ├── LoginPage.jsx
+│   ├── PokedexPage.jsx
+│   ├── TeamBuilderPage.jsx
+│   ├── ShopPage.jsx
+│   └── AdminDashboardPage.jsx
+├── services/
+│   ├── firebase.js       # Firebase app init
+│   ├── authService.js    # login, register, logout, getUserRole
+│   ├── firestoreService.js # teams CRUD, catalog CRUD
+│   └── pokeapiService.js # fetch Pokémon, fetch items (native fetch)
+├── store/
+│   ├── authStore.js   # Zustand: user, role, loading
+│   ├── teamStore.js   # Zustand: current team, saved teams
+│   └── shopStore.js   # Zustand: catalog items, cart/owned items
+├── utils/
+│   └── cn.js          # clsx + tailwind-merge helper
+├── router/
+│   └── AppRouter.jsx  # All routes definition
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+### Phase 3 — Routing
+
+| Path | Component | Access |
+|------|-----------|--------|
+| `/` | Redirect → `/login` | Public |
+| `/login` | `LoginPage` | Public only |
+| `/pokedex` | `PokedexPage` | User + Admin |
+| `/team` | `TeamBuilderPage` | User + Admin |
+| `/shop` | `ShopPage` | User + Admin |
+| `/admin` | `AdminDashboardPage` | Admin only |
+
+Guards:
+- `ProtectedRoute` — redirects to `/login` if not authenticated
+- `RoleGuard` — redirects to `/pokedex` if role doesn't match
+
+---
+
+### Phase 4 — Firebase Services
+
+#### `authService.js`
+- `loginWithEmail(email, password)` → Firebase Auth `signInWithEmailAndPassword`
+- `registerWithEmail(email, password)` → `createUserWithEmailAndPassword` + create Firestore `users/{uid}` doc with `role: "user"`
+- `logout()` → `signOut`
+- `getUserRole(uid)` → reads `users/{uid}.role` from Firestore
+
+#### `firestoreService.js`
+- **Teams** (collection: `teams`):
+  - `saveTeam(userId, team)` → POST (addDoc)
+  - `getUserTeams(userId)` → GET (query)
+  - `deleteTeam(teamId)` → DELETE (deleteDoc)
+- **Shop Catalog** (collection: `shopItems`):
+  - `getShopItems()` → GET
+  - `addShopItem(item)` → POST (addDoc) [Admin]
+  - `updateShopItem(id, data)` → PUT/PATCH (updateDoc) [Admin]
+  - `deleteShopItem(id)` → DELETE (deleteDoc) [Admin]
+
+---
+
+### Phase 5 — PokéAPI Service (`pokeapiService.js`)
+
+Using **native `fetch`** only:
+- `getPokemonList(limit, offset)` → `GET https://pokeapi.co/api/v2/pokemon`
+- `getPokemonDetail(nameOrId)` → `GET https://pokeapi.co/api/v2/pokemon/{id}`
+- `getItemList(limit, offset)` → `GET https://pokeapi.co/api/v2/item`
+- `getItemDetail(nameOrId)` → `GET https://pokeapi.co/api/v2/item/{id}`
+
+---
+
+### Phase 6 — Zustand Stores
+
+- **`authStore`**: `{ user, role, loading, setUser, setRole, clearAuth }`
+- **`teamStore`**: `{ currentTeam[], savedTeams[], addToTeam, removeFromTeam, clearTeam, setSavedTeams }`
+- **`shopStore`**: `{ catalogItems[], ownedItems[], setCatalog, buyItem }`
+
+---
+
+### Phase 7 — Pages & UI
+
+#### LoginPage
+- `react-hook-form` for email/password form
+- Toggle: "Entrenador" / "Administrador" login (same form, role resolved from Firestore)
+- Register new account option
+
+#### PokedexPage
+- Search bar, paginated grid of Pokémon cards
+- Click card → modal with stats
+
+#### TeamBuilderPage
+- Up to 6 Pokémon slots
+- Add from Pokédex search, remove, rename team
+- Save team → Firestore (POST)
+- View saved teams (GET)
+
+#### ShopPage
+- Grid of items from `shopItems` Firestore collection (seeded from PokéAPI items)
+- "Buy" button → assigns item to user (PUT/PATCH on user's owned items)
+
+#### AdminDashboardPage
+- Table of `shopItems`
+- Add new item form (react-hook-form)
+- Edit price inline → updateShopItem (PUT)
+- Delete item → deleteShopItem (DELETE)
+
+---
+
+## Verification Plan
+
+### Automated (Build)
+```bash
+npm run build
+```
+Verifies no TypeScript/JSX compile errors and Vite can bundle correctly.
+
+### Manual Verification Steps
+
+1. **Tailwind breakpoints**: Open browser DevTools → resize window to 480, 510, 767, 990, 1920px and verify layout changes.
+2. **Auth – User flow**:
+   - Register a new account → should redirect to `/pokedex`
+   - Visit `/admin` → should redirect to `/pokedex` (no access)
+3. **Auth – Admin flow**:
+   - Manually set `role: "admin"` in Firestore for a user
+   - Login → should see Admin nav link and access `/admin`
+4. **Pokédex**: Search "pikachu" → card appears with sprite and stats modal
+5. **Team Builder**: Add 6 Pokémon → save team → team appears in saved list
+6. **Shop (User)**: Browse items → click Buy → item marked as owned
+7. **Admin CRUD**: Add item → appears in table → edit price → delete it
+8. **GitHub Pages build**: Run `npm run build` → check `dist/` folder has `index.html` with correct base URL assets
