@@ -11,7 +11,7 @@ import Loader from '../components/ui/Loader';
 import Modal from '../components/ui/Modal';
 import { cn } from '../utils/cn';
 
-const PAGE_SIZE = 32;
+const PAGE_SIZE = 40;
 
 // Artwork de alta resolución (formas no siempre lo tienen → fallback a sprite normal)
 const artworkUrl = (id, shiny = false) =>
@@ -147,6 +147,7 @@ export default function PokedexPage() {
             id: pokemon.id,
             name: pokemon.name,
             sprite: pokemon.sprites.front_default,
+            shinySprite: pokemon.sprites.front_shiny,
             types: pokemon.types.map((t) => t.type.name),
         });
 

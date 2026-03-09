@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useTeamStore } from '../store/teamStore';
+import { useShinyStore } from '../store/shinyStore';
 import { saveTeam, getUserTeams, deleteTeam } from '../services/firestoreService';
 import PageWrapper from '../components/layout/PageWrapper';
 import Card from '../components/ui/Card';
@@ -17,6 +18,7 @@ export default function TeamBuilderPage() {
         removeFromTeam, clearTeam,
         savedTeams, setSavedTeams, addSavedTeam, removeSavedTeam,
     } = useTeamStore();
+    const { isShiny } = useShinyStore();
 
     const [saving, setSaving] = useState(false);
     const [loadingTeams, setLoadingTeams] = useState(true);
@@ -100,7 +102,7 @@ export default function TeamBuilderPage() {
                                 {pokemon ? (
                                     <>
                                         <img
-                                            src={pokemon.sprite}
+                                            src={isShiny(pokemon.id) && pokemon.shinySprite ? pokemon.shinySprite : pokemon.sprite}
                                             alt={pokemon.name}
                                             className="w-12 h-12 object-contain drop-shadow"
                                             style={{ imageRendering: 'pixelated' }}
@@ -154,7 +156,7 @@ export default function TeamBuilderPage() {
                                     {team.pokemon.map((p) => (
                                         <div key={p.id} className="flex flex-col items-center">
                                             <img
-                                                src={p.sprite}
+                                                src={isShiny(p.id) && p.shinySprite ? p.shinySprite : p.sprite}
                                                 alt={p.name}
                                                 className="w-12 h-12 object-contain"
                                                 style={{ imageRendering: 'pixelated' }}
