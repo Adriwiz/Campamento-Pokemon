@@ -28,7 +28,7 @@ export default function Navbar() {
             style={{ background: 'linear-gradient(135deg, #CC0000 0%, #990000 100%)' }}
         >
             <div className="h-1 bg-gradient-to-r from-black via-white/30 to-black" />
-            <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex items-center justify-between h-14">
+            <div className="max-w-[1920px] mx-auto px-4 xl:px-8 py-2 min-h-[3.5rem] flex flex-wrap items-center justify-between gap-y-3 gap-x-4">
 
                 {/* Logo */}
                 <Link
@@ -41,7 +41,7 @@ export default function Navbar() {
                 </Link>
 
                 {/* Nav links */}
-                <ul className="flex items-center gap-1">
+                <ul className="flex items-center flex-wrap justify-center gap-1.5 flex-1 md:flex-none">
                     {NAV_LINKS.map(({ to, label }) => (
                         <li key={to}>
                             <Link

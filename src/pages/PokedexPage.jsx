@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getPokemonList, getPokemonDetail } from '../services/pokeapiService';
 import { useTeamStore } from '../store/teamStore';
+import { useShinyStore } from '../store/shinyStore';
 import PageWrapper from '../components/layout/PageWrapper';
 import Paginator from '../components/ui/Paginator';
 import Card from '../components/ui/Card';
@@ -10,11 +11,12 @@ import Loader from '../components/ui/Loader';
 import Modal from '../components/ui/Modal';
 import { cn } from '../utils/cn';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 32;
 
 // Artwork de alta resolución (formas no siempre lo tienen → fallback a sprite normal)
-const artworkUrl = (id) =>
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+const artworkUrl = (id, shiny = false) =>
+    shiny ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${id}.png`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
 const idFromUrl = (url) => Number(url.replace(/\/$/, '').split('/').pop());
 
@@ -77,6 +79,7 @@ export default function PokedexPage() {
     const [selected, setSelected] = useState(null);
 
     const { currentTeam, addToTeam } = useTeamStore();
+    const { shinyIds, toggleShiny, isShiny } = useShinyStore();
 
     // ── 1. Carga catálogo completo incluyendo formas (hasta ~3000) ──────────
     useEffect(() => {
@@ -239,7 +242,7 @@ export default function PokedexPage() {
                                 <div className="relative w-full flex justify-center">
                                     <div className="w-20 h-20 rounded-xl flex items-center justify-center border border-blue-900/40"
                                         style={{ backgroundColor: 'var(--screen-bg)' }}>
-                                        <img src={pokemon.sprites.front_default}
+                                        <img src={isShiny(pokemon.id) && pokemon.sprites.front_shiny ? pokemon.sprites.front_shiny : pokemon.sprites.front_default}
                                             alt={pokemon.name}
                                             className="w-16 h-16 object-contain group-hover:scale-110 transition-transform duration-300"
                                             style={{ imageRendering: 'pixelated' }} />
@@ -270,9 +273,9 @@ export default function PokedexPage() {
                 {!selected ? null : (
                     <div className="flex flex-col sm:flex-row gap-6">
                         <div className="flex flex-col items-center gap-3 sm:w-40">
-                            <img src={artworkUrl(selected.id)} alt={selected.name}
+                            <img src={artworkUrl(selected.id, isShiny(selected.id))} alt={selected.name}
                                 className="w-36 h-36 object-contain drop-shadow-2xl"
-                                onError={(e) => { e.target.src = selected.sprites.front_default; }} />
+                                onError={(e) => { e.target.src = isShiny(selected.id) && selected.sprites.front_shiny ? selected.sprites.front_shiny : selected.sprites.front_default; }} />
                             <div className="flex gap-1 flex-wrap justify-center">
                                 {selected.types.map((t) => <Badge key={t.type.name} label={t.type.name} type={t.type.name} />)}
                             </div>
@@ -280,6 +283,11 @@ export default function PokedexPage() {
                             <Button onClick={() => { handleAddToTeam(selected); setSelected(null); }}
                                 disabled={inTeam(selected.id) || currentTeam.length >= 6} className="w-full text-xs">
                                 {inTeam(selected.id) ? '✓ Ya en equipo' : '⚔️ Añadir al equipo'}
+                            </Button>
+                            <Button
+                                onClick={() => toggleShiny(selected.id)}
+                                className={`w-full text-xs transition-colors ${isShiny(selected.id) ? 'bg-yellow-400 text-black border-yellow-600 hover:bg-yellow-300' : 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700'}`}>
+                                {isShiny(selected.id) ? '✨ Quitar Shiny' : '✨ Hacer Shiny'}
                             </Button>
                         </div>
                         <div className="flex-1 min-w-0">
